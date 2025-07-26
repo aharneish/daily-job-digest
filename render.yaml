@@ -1,0 +1,7 @@
+services:
+  - type: cron
+    name: daily-job-digest
+    schedule: "30 6 * * *"  # UTC+0 → 12:00 PM IST
+    runtime: python
+    buildCommand: ""
+    startCommand: "python daily_job_digest.py"
