@@ -1,147 +1,126 @@
 import requests
-from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
 import smtplib
 import csv
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.application import MIMEApplication
+from bs4 import BeautifulSoup
+from datetime import datetime, timedelta
+from email.message import EmailMessage
+from email.utils import make_msgid
 import os
 from dotenv import load_dotenv
-
 load_dotenv()
 
-# -------------------- CONFIG --------------------
-GMAIL_USER = "your_email"
-GMAIL_PASS = os.getenv("GMAIL_PASS")
-RECIPIENT = "your_email"
-LINKEDIN_COOKIE = os.getenv("LINKEDIN_COOKIE")
-
-SEARCH_KEYWORDS = "Machine Learning Engineer" #change it accourding to your role
+# 🛠 CONFIG
+SEARCH_KEYWORDS = "Machine Learning Engineer"
 LOCATION = "India"
-MAX_AGE_HOURS = 12
-CSV_FILENAME = "job_listings.csv"
-# -------------------------------------------------
+MAX_AGE_HOURS = 24
+GMAIL_USER = "YOUR_EMAIL"       # your Gmail address
+GMAIL_PASS = os.getenv("GMAIL_PASS")       # app password (not your Gmail password)
+TO_EMAIL = "YOUR_EMAIL"
+LINKEDIN_COOKIE = os.getenv("LINKEDIN_SESSION_COOKIE")  # set as secret
 
-def is_recent(posted_str, max_age_hours=12):
-    posted_str = posted_str.lower()
-    if "just" in posted_str:
-        return True
-    if "hour" in posted_str:
-        try:
-            hours = int(posted_str.split()[0])
-            return hours <= max_age_hours
-        except:
-            return False
-    if "minute" in posted_str:
-        return True
-    if "day" in posted_str:
-        try:
-            days = int(posted_str.split()[0])
-            return (days * 24) <= max_age_hours
-        except:
-            return False
-    return False
-
-def scrape_indeed_jobs(keyword, location, max_age_hours):
-    print("🌐 Scraping Indeed...")
-    url = f"https://in.indeed.com/jobs?q={keyword}&l={location}&sort=date"
+def fetch_indeed_jobs():
+    print("🔍 Scraping Indeed...")
+    url = f"https://in.indeed.com/jobs?q={SEARCH_KEYWORDS}&l={LOCATION}&sort=date"
     headers = {"User-Agent": "Mozilla/5.0"}
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.text, "lxml")
+    r = requests.get(url, headers=headers)
+    soup = BeautifulSoup(r.text, "lxml")
     jobs = []
 
     for card in soup.select("div.job_seen_beacon"):
-        title = card.select_one("h2.jobTitle span")
-        company = card.select_one("span.companyName")
-        loc = card.select_one("div.companyLocation")
-        posted = card.select_one("span.date")
+        title_el = card.select_one("h2.jobTitle span")
+        company_el = card.select_one("span.companyName")
+        location_el = card.select_one("div.companyLocation")
+        date_el = card.select_one("span.date")
         link_el = card.select_one("a")
-        if not all([title, company, loc, posted, link_el]):
+
+        if not all([title_el, company_el, location_el, date_el, link_el]):
             continue
-        if not is_recent(posted.text, max_age_hours):
-            continue
-        job_url = "https://in.indeed.com" + link_el["href"]
-        jobs.append({
-            "title": title.text.strip(),
-            "company": company.text.strip(),
-            "location": loc.text.strip(),
-            "posted": posted.text.strip(),
-            "link": job_url
-        })
-    print(f"✅ Found {len(jobs)} jobs on Indeed")
+
+        posted = date_el.text.lower()
+        if "hour" in posted or "just" in posted:
+            jobs.append({
+                "source": "Indeed",
+                "title": title_el.text.strip(),
+                "company": company_el.text.strip(),
+                "location": location_el.text.strip(),
+                "posted": posted.strip(),
+                "link": f"https://in.indeed.com{link_el['href']}"
+            })
     return jobs
 
-def scrape_linkedin_jobs(keyword, max_age_hours):
-    print("🌐 Scraping LinkedIn...")
+def fetch_linkedin_jobs():
+    print("🔍 Scraping LinkedIn...")
+    now = datetime.utcnow()
+    start = now - timedelta(hours=MAX_AGE_HOURS)
+    start_ts = int(start.timestamp())
+
+    url = (
+        "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
+        f"?keywords={SEARCH_KEYWORDS}&location={LOCATION}&f_TPR=r{MAX_AGE_HOURS}h&sortBy=DD"
+    )
     headers = {
         "User-Agent": "Mozilla/5.0",
         "Cookie": f"li_at={LINKEDIN_COOKIE}"
     }
 
-    url = (
-        f"https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
-        f"?keywords={keyword}&location=India&f_TPR=r{max_age_hours}h&sortBy=DD"
-    )
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.text, "lxml")
-
+    r = requests.get(url, headers=headers)
+    soup = BeautifulSoup(r.text, "lxml")
     jobs = []
-    for job_card in soup.select("li"):
-        title_el = job_card.select_one("h3")
-        company_el = job_card.select_one("h4")
-        location_el = job_card.select_one(".job-search-card__location")
-        time_ago_el = job_card.select_one("time")
-        link_el = job_card.select_one("a")
 
-        if not all([title_el, company_el, location_el, time_ago_el, link_el]):
+    for job in soup.select("li"):
+        title_el = job.select_one("h3")
+        company_el = job.select_one("h4")
+        location_el = job.select_one(".job-search-card__location")
+        date_el = job.select_one("time")
+        link_el = job.select_one("a")
+
+        if not all([title_el, company_el, location_el, date_el, link_el]):
             continue
-        if not is_recent(time_ago_el.text, max_age_hours):
-            continue
+
         jobs.append({
+            "source": "LinkedIn",
             "title": title_el.text.strip(),
             "company": company_el.text.strip(),
             "location": location_el.text.strip(),
-            "posted": time_ago_el.text.strip(),
-            "link": "https://www.linkedin.com" + link_el['href'].split('?')[0]
+            "posted": date_el.text.strip(),
+            "link": link_el["href"].strip()
         })
-    print(f"✅ Found {len(jobs)} jobs on LinkedIn")
+
     return jobs
 
-def save_jobs_to_csv(jobs, filename):
-    with open(filename, mode="w", newline="", encoding="utf-8") as file:
-        writer = csv.DictWriter(file, fieldnames=["title", "company", "location", "posted", "link"])
+def save_to_csv(jobs, filename="job_listings.csv"):
+    print(f"📁 Writing {len(jobs)} jobs to CSV...")
+    with open(filename, "w", newline='', encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=jobs[0].keys())
         writer.writeheader()
         writer.writerows(jobs)
 
 def send_email(jobs):
+    if not jobs:
+        print("📭 No jobs found in the last 12 hours. Skipping email.")
+        return
+
+    save_to_csv(jobs)
     print("📧 Sending email...")
-    msg = MIMEMultipart()
-    msg["Subject"] = f"🔥 {len(jobs)} New ML Jobs - {datetime.now().strftime('%Y-%m-%d')}"
+
+    msg = EmailMessage()
+    msg["Subject"] = f"🧠 ML Job Digest — {len(jobs)} new listings"
     msg["From"] = GMAIL_USER
-    msg["To"] = RECIPIENT
+    msg["To"] = TO_EMAIL
 
-    # Plain text summary
-    text = "\n".join(
-        f"{j['title']} at {j['company']} ({j['location']}) - {j['posted']}\n{j['link']}"
-        for j in jobs
-    ) or "No jobs found in the last 12 hours."
+    msg.set_content(f"""
+Hi there,
 
-    # HTML version
-    html = "<h3>🔥 New Job Listings</h3><ul>"
-    for j in jobs:
-        html += f"<li><b>{j['title']}</b> at {j['company']} ({j['location']}) - {j['posted']}<br>"
-        html += f"<a href='{j['link']}'>Apply Here</a></li><br>"
-    html += "</ul>"
+Here are the top Machine Learning Engineer jobs posted in the last {MAX_AGE_HOURS} hours.
 
-    msg.attach(MIMEText(text, "plain"))
-    msg.attach(MIMEText(html, "html"))
+Attached is the CSV with job titles, companies, locations, and links.
 
-    # Attach CSV
-    with open(CSV_FILENAME, "rb") as f:
-        part = MIMEApplication(f.read(), Name=CSV_FILENAME)
-        part["Content-Disposition"] = f'attachment; filename="{CSV_FILENAME}"'
-        msg.attach(part)
+Regards,
+Your Job Bot 🤖
+""")
+
+    with open("job_listings.csv", "rb") as f:
+        msg.add_attachment(f.read(), maintype="text", subtype="csv", filename="job_listings.csv")
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(GMAIL_USER, GMAIL_PASS)
@@ -150,10 +129,9 @@ def send_email(jobs):
     print("✅ Email sent!")
 
 def main():
-    indeed_jobs = scrape_indeed_jobs(SEARCH_KEYWORDS, LOCATION, MAX_AGE_HOURS)
-    linkedin_jobs = scrape_linkedin_jobs(SEARCH_KEYWORDS, MAX_AGE_HOURS)
-    all_jobs = indeed_jobs + linkedin_jobs
-    save_jobs_to_csv(all_jobs, CSV_FILENAME)
+    indeed = fetch_indeed_jobs()
+    linkedin = fetch_linkedin_jobs()
+    all_jobs = indeed + linkedin
     send_email(all_jobs)
 
 if __name__ == "__main__":
