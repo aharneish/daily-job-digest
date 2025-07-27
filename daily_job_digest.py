@@ -12,12 +12,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # -------------------- CONFIG --------------------
-GMAIL_USER = "aharneish@gmail.com"
+GMAIL_USER = "your_email"
 GMAIL_PASS = os.getenv("GMAIL_PASS")
-RECIPIENT = "aharneish@gmail.com"
-LINKEDIN_COOKIE = os.getenv("LINKEDIN_SESSION_COOKIE")
+RECIPIENT = "your_email"
+LINKEDIN_COOKIE = os.getenv("LINKEDIN_COOKIE")
 
-SEARCH_KEYWORDS = "Machine Learning Engineer"
+SEARCH_KEYWORDS = "Machine Learning Engineer" #change it accourding to your role
 LOCATION = "India"
 MAX_AGE_HOURS = 12
 CSV_FILENAME = "job_listings.csv"
