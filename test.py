@@ -35,9 +35,6 @@ WEB_SEARCH_QUERIES = [
     f"{SEARCH_KEYWORDS} jobs {LOCATION} site:freshersworld.com",
     f"{SEARCH_KEYWORDS} jobs {LOCATION} site:timesjobs.com",
     f"{SEARCH_KEYWORDS} jobs {LOCATION} site:instahyre.com",
-    f"{SEARCH_KEYWORDS} jobs {LOCATION} site:weworkremotely.com",
-    f"{SEARCH_KEYWORDS} jobs {LOCATION} site:remotely.works",
-    f"{SEARCH_KEYWORDS} jobs {LOCATION} site:remotive.com",
     f"{SEARCH_KEYWORDS} jobs {LOCATION} remote",
     f'"{SEARCH_KEYWORDS}" jobs posted today {LOCATION}',
     f'"{SEARCH_KEYWORDS}" hiring {LOCATION} latest'
