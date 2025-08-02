@@ -1,223 +1,236 @@
-# Enhanced Daily Job Digest with Web Search
+# 🤖 AI-Powered Job Scraper with Resume Customization
 
-This project automates the collection of job listings from multiple sources including web search across various job portals, and sends a comprehensive daily digest email with advanced filtering capabilities.
+## 🚀 Quick Setup Guide
 
-## 🚀 New Features
-
-### 🌐 **Web Search Integration**
-- Automatically searches across **10+ job portals** including Naukri, Shine, Monster, Glassdoor, FreshersWorld, TimesJobs, Instahyre, and more
-- Uses intelligent web scraping to find the latest job postings
-- Supports time-based searches (past 24 hours, past hour)
-- Configurable search queries and result limits
-
-### 🎯 **Advanced Filtering**
-- **Time Range Filtering**: Filter jobs by posting time (hours/days)
-- **Skills-Based Filtering**: Required skills, preferred skills with scoring
-- **Keyword Exclusion**: Filter out unwanted job types
-- **Relevance Scoring**: Jobs ranked by skill matches
-- **Duplicate Removal**: Intelligent deduplication across sources
-
-### 📊 **Enhanced Analytics**
-- Source breakdown (Indeed, LinkedIn, Web Search)
-- Job quality metrics (high/medium/low relevance)
-- Skill trend analysis
-- Filtering statistics
-
-## Features
-
-- Fetches job listings from multiple sources:
-  - **Indeed** (direct scraping)
-  - **LinkedIn** (with session cookie)
-  - **Web Search** across 10+ job portals
-- Advanced filtering with time range and skills matching
-- Intelligent job relevance scoring
-- Sends detailed email digest with analytics
-- Can be triggered manually or scheduled via GitHub Actions
-- Containerization support via Docker
-
-## File Structure
-
-```
-.
-├── daily_job_digest.py         # Enhanced main script with web search
-├── main.py                    # Entry point or utility script
-├── job_listings.csv           # Source data for job listings
-├── requirements.txt           # Python dependencies
-├── pyproject.toml             # Project metadata/configuration
-├── Dockerfile.dockerfile      # Dockerfile for containerization
-├── render.yaml                # Additional configuration
-├── uv.lock                    # Dependency lock file
-├── __pycache__/               # Python bytecode cache
-├── Job-bot/                   # (Folder, contents not listed)
-└── .github/
-    └── workflows/
-        └── daily-job.yml      # GitHub Actions workflow for automation
-```
-
-## Setup
-
-1. **Clone the repository**
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Configure environment variables** (create `.env` file)
-   ```bash
-   # Basic Configuration
-   GMAIL_USER=your_email@gmail.com
-   GMAIL_PASS=your_gmail_app_password
-   TO_EMAIL=recipient@gmail.com
-   
-   # Job Search Config
-   SEARCH_KEYWORDS=Machine Learning Engineer
-   LOCATION=India
-   
-   # Web Search (NEW)
-   ENABLE_WEB_SEARCH=true
-   MAX_SEARCH_RESULTS_PER_QUERY=20
-   
-   # Advanced Filtering
-   TIME_RANGE_HOURS=24
-   REQUIRED_SKILLS=
-   PREFERRED_SKILLS=python,tensorflow,pytorch,machine learning,AI
-   MIN_SKILL_MATCH_SCORE=1
-   EXCLUDE_KEYWORDS=intern,internship
-   
-   # LinkedIn (optional)
-   LINKEDIN_SESSION_COOKIE=your_linkedin_li_at_cookie
-   ```
-
-4. **Gmail App Password Setup**:
-   1. Go to your Google Account > Security
-   2. Enable 2-Step Verification
-   3. Under 'Signing in to Google', select 'App Passwords'
-   4. Generate a password for 'Mail' and 'Other' (give a name, e.g., 'Job Digest')
-   5. Use the generated password as `GMAIL_PASS`
-
-5. **LinkedIn Session Cookie** (optional for LinkedIn scraping):
-   1. Log in to LinkedIn in your browser
-   2. Open Developer Tools (F12), go to the 'Application' tab
-   3. Under 'Cookies', find the value for `li_at`
-   4. Use this value as `LINKEDIN_SESSION_COOKIE`
-
-6. **Run the script**
-   ```bash
-   python daily_job_digest.py
-   ```
-
-## 🌐 Web Search Sources
-
-The enhanced script searches across these job portals:
-- **Naukri.com** - India's largest job portal
-- **Shine.com** - Career platform
-- **Monster.com** - Global job board
-- **Glassdoor.com** - Company reviews and jobs
-- **FreshersWorld.com** - Entry-level jobs
-- **TimesJobs.com** - Times Group job portal
-- **Instahyre.com** - Tech jobs platform
-- **General web search** for recent postings
-- **Remote job search** across platforms
-
-## 🎯 Advanced Configuration Examples
-
-### For Senior ML Engineers
+### 1. Install Dependencies
 ```bash
-SEARCH_KEYWORDS=Senior Machine Learning Engineer
-REQUIRED_SKILLS=senior,machine learning
-PREFERRED_SKILLS=python,tensorflow,pytorch,kubernetes,docker,aws,gcp,azure
-MIN_SKILL_MATCH_SCORE=3
-EXCLUDE_KEYWORDS=intern,junior,entry level
-TIME_RANGE_HOURS=24
+pip install -r requirements.txt
 ```
 
-### For Computer Vision Specialists
+### 2. Get Your Groq API Key (Free!)
+1. Go to [https://console.groq.com/](https://console.groq.com/)
+2. Sign up for a free account
+3. Navigate to API Keys section
+4. Create a new API key
+5. Copy the API key for your `.env` file
+
+### 3. Create Resume Folder Structure
+```
+your_project/
+├── resume/
+│   ├── my_resume.txt       # Your main resume (text format)
+│   ├── my_resume.docx      # Optional: Word format
+│   └── my_resume.pdf       # Optional: PDF format
+├── customized_resumes/     # Will be created automatically
+├── daily_job_digest.py
+├── .env
+└── requirements.txt
+```
+
+### 4. Configure Your .env File
 ```bash
-SEARCH_KEYWORDS=Computer Vision Engineer
-REQUIRED_SKILLS=computer vision
-PREFERRED_SKILLS=opencv,pytorch,tensorflow,python,deep learning,CNN,image processing
-MIN_SKILL_MATCH_SCORE=2
-TIME_RANGE_HOURS=12
+# Required settings
+GROQ_API_KEY=your_groq_api_key_here
+GMAIL_USER=your_email@gmail.com
+GMAIL_PASS=your_app_password
+
+# Resume customization settings
+ENABLE_RESUME_CUSTOMIZATION=true
+RESUME_FOLDER=resume
+OUTPUT_RESUME_FOLDER=customized_resumes
+MAX_RESUMES_TO_CUSTOMIZE=5
+
+# Job search settings
+SEARCH_KEYWORDS=Machine Learning Engineer
+LOCATION=India
+MIN_EXPERIENCE_YEARS=2
+MAX_EXPERIENCE_YEARS=8
 ```
 
-### For Recent Jobs (Past Hour)
+### 5. Prepare Your Resume
+Place your resume in the `resume/` folder in one of these formats:
+- `.txt` - Plain text (recommended for best AI processing)
+- `.docx` - Microsoft Word
+- `.pdf` - PDF format
+- `.md` - Markdown format
+
+## 🤖 How AI Resume Customization Works
+
+### For Each Top Job Match:
+1. **Analyzes** the job description for key requirements
+2. **Customizes** your resume to highlight relevant experience
+3. **Optimizes** keywords for ATS systems
+4. **Generates** a tailored cover letter
+5. **Creates** a dedicated folder with:
+   - Customized resume
+   - Cover letter
+   - Original resume (for reference)
+   - Job details in JSON format
+
+### Example Output Structure:
+```
+customized_resumes/
+├── Machine Learning Engineer - Google/
+│   ├── my_resume_customized.txt
+│   ├── cover_letter.txt
+│   ├── original_my_resume.txt
+│   └── job_info.json
+├── Data Scientist - Microsoft/
+│   ├── my_resume_customized.txt
+│   ├── cover_letter.txt
+│   ├── original_my_resume.txt
+│   └── job_info.json
+└── AI Engineer - OpenAI/
+    ├── my_resume_customized.txt
+    ├── cover_letter.txt
+    ├── original_my_resume.txt
+    └── job_info.json
+```
+
+## 🎯 Key Features
+
+### ✅ What the AI Does:
+- Reorganizes experience to highlight relevant skills
+- Adjusts professional summary for each role
+- Emphasizes matching technical skills
+- Uses job-specific keywords naturally
+- Generates personalized cover letters
+- Maintains factual accuracy (no fake information)
+
+### ❌ What the AI Doesn't Do:
+- Add fake experience or skills
+- Change your actual work history
+- Create unrealistic qualifications
+- Modify core personal information
+
+## 🛠 Configuration Options
+
+### Resume Customization Intensity:
 ```bash
-SEARCH_KEYWORDS=Machine Learning Engineer latest jobs
-TIME_RANGE_HOURS=1
-ENABLE_WEB_SEARCH=true
-MAX_SEARCH_RESULTS_PER_QUERY=30
+# Conservative (3 best matches, highest quality)
+MAX_RESUMES_TO_CUSTOMIZE=3
+GROQ_MODEL=llama-3.1-70b-versatile
+
+# Balanced (5 matches, good quality)
+MAX_RESUMES_TO_CUSTOMIZE=5
+GROQ_MODEL=llama-3.1-70b-versatile
+
+# Aggressive (10 matches, faster processing)
+MAX_RESUMES_TO_CUSTOMIZE=10
+GROQ_MODEL=llama-3.1-8b-instant
 ```
 
-### For Remote Work
+### Available Groq Models:
+- `llama-3.1-70b-versatile` - Best quality, slower (Recommended)
+- `llama-3.1-8b-instant` - Fast processing, good quality
+- `mixtral-8x7b-32768` - Large context window
+- `gemma2-9b-it` - Lightweight option
+
+## 📊 Enhanced Email Reports
+
+### New Email Features:
+- Resume customization statistics
+- AI processing summary
+- Direct links to customized resume folders
+- Cover letter generation status
+- Model performance metrics
+
+### Sample Email Subject:
+```
+🧠🤖 AI-Powered ML Job Digest (Resume Customization) — 12 matches, 5 customized
+```
+
+## 🔧 Advanced Usage Tips
+
+### 1. Optimize Your Base Resume
+- Use clear, structured formatting
+- Include comprehensive skill lists
+- Detail your achievements with metrics
+- Use industry-standard terminology
+
+### 2. Fine-tune Job Filtering
 ```bash
-SEARCH_KEYWORDS=Remote Machine Learning Engineer
-LOCATION=Remote
-PREFERRED_SKILLS=python,tensorflow,pytorch,remote work,distributed systems
+# For better AI customization results
+MIN_SKILL_MATCH_SCORE=2  # Higher quality jobs
+PREFERRED_SKILLS=python,machine learning,tensorflow,pytorch,aws,docker
 ```
 
-## 📧 Enhanced Email Features
+### 3. Monitor API Usage
+- Groq offers generous free tiers
+- Each resume customization uses ~2-3 API calls
+- Monitor your usage at [https://console.groq.com/](https://console.groq.com/)
 
-The digest email now includes:
-- **Filter Summary**: Applied criteria and statistics
-- **Source Breakdown**: Jobs from each platform
-- **Job Quality Metrics**: High/medium/low relevance breakdown
-- **Top Skills Analysis**: Most demanded skills
-- **Top Matches**: Best 5 jobs with detailed info
-- **Complete CSV Export**: All jobs with metadata
+### 4. Resume Format Recommendations
+- **Best:** Plain text (.txt) - Easiest for AI to process
+- **Good:** Markdown (.md) - Structured but readable
+- **OK:** Word (.docx) - Requires python-docx
+- **Limited:** PDF (.pdf) - May lose formatting
 
-## Automation
+## 🚨 Troubleshooting
 
-The workflow `.github/workflows/daily-job.yml` runs the job daily at 06:30 UTC and can be triggered manually. It sets up Python, installs dependencies, and runs the enhanced script with web search.
+### Common Issues:
 
-## Docker
+1. **"Groq API key is required"**
+   - Check your `.env` file has `GROQ_API_KEY=your_actual_key`
+   - Ensure no extra spaces around the key
 
-To build and run the project in a container:
+2. **"No resume files found"**
+   - Verify `resume/` folder exists
+   - Check file formats are supported (.txt, .md, .docx, .pdf)
+   - Ensure `RESUME_FOLDER=resume` in `.env`
+
+3. **"Error customizing resume"**
+   - Check your Groq API key is valid
+   - Verify internet connection
+   - Try a different model (e.g., `llama-3.1-8b-instant`)
+
+4. **Poor customization quality**
+   - Try `llama-3.1-70b-versatile` model
+   - Improve your base resume structure
+   - Reduce `MAX_RESUMES_TO_CUSTOMIZE` for higher quality
+
+### Debug Mode:
 ```bash
-docker build -f Dockerfile.dockerfile -t enhanced-job-digest .
-docker run --env-file .env enhanced-job-digest
+# Add this to see detailed processing
+export DEBUG=true
+python daily_job_digest.py
 ```
 
-## 🔧 Performance & Rate Limiting
+## 🔄 Running the System
 
-- Built-in rate limiting to respect website policies
-- Duplicate detection across all sources
-- Efficient caching to avoid re-processing same URLs
-- Configurable result limits per search query
-- Error handling for failed requests
+### Manual Run:
+```bash
+python daily_job_digest.py
+```
 
-## 📊 Output Formats
+### Scheduled Run (Cron):
+```bash
+# Run daily at 9 AM
+0 9 * * * /usr/bin/python3 /path/to/daily_job_digest.py
+```
 
-- **Email Digest**: Rich HTML email with analytics
-- **CSV Export**: Detailed spreadsheet with all job data
-- **Console Logs**: Real-time progress and statistics
+### Test Configuration:
+```bash
+# Test with minimal settings first
+MAX_RESUMES_TO_CUSTOMIZE=1
+GROQ_MODEL=llama-3.1-8b-instant
+```
 
-## Troubleshooting
+## 💡 Best Practices
 
-### Web Search Issues
-- If web search fails, the script continues with Indeed/LinkedIn
-- Rate limiting may cause delays - this is normal
-- Some job portals may block automated access - the script handles this gracefully
+1. **Start Small:** Test with 1-2 resume customizations first
+2. **Quality Base Resume:** Ensure your original resume is comprehensive
+3. **Monitor Results:** Review customized resumes for quality
+4. **Iterate Settings:** Adjust filters based on results
+5. **Keep Backups:** Original resumes are preserved automatically
+6. **Review Before Sending:** Always review AI-customized content
 
-### Email Issues
-- Ensure Gmail App Password is correctly set
-- Check spam folder for digest emails
-- Verify `GMAIL_USER` and `TO_EMAIL` are correct
+## 📈 Success Metrics
 
-### LinkedIn Issues
-- LinkedIn cookie may expire - refresh it periodically
-- LinkedIn scraping is optional and can be disabled
+Track your improvements:
+- Application response rates
+- Interview call rates
+- Time saved on resume customization
+- Quality of job matches
 
-## Contributing
-
-Feel free to open issues or submit pull requests for improvements. The enhanced script is designed to be modular and extensible.
-
-## Legal & Ethical Considerations
-
-- Respects robots.txt and rate limiting
-- Uses public job posting data only
-- Implements delays to avoid overwhelming servers
-- Follows web scraping best practices
-
----
-
-**Enhanced Job Bot** - Now with 10x more job sources! 🚀
+The AI system learns from job descriptions to create increasingly targeted resumes for better application success rates!
